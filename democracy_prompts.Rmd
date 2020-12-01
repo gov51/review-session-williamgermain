@@ -1,0 +1,162 @@
+---
+title: "Democracy and Redistribution"
+output: pdf_document
+---
+
+A long-standing debate in the social sciences is whether democracies redistribute more to the poor than autocracies.  Research on this topic is challenging, however, due to the prevalence of missing data. Information about particular countries (and variables) are often missing, and this absence of data is not random. For example, autocratic countries are less likely to report their data to international institutions like the World Bank. Also, starting in the 1990s, countries have become better at both collecting and reporting data on different indicators such as economic growth or infant mortality. So if we just analyze data without taking these factors into account, we might bias our results. This exercise is based on the following prominent paper:
+
+Ross, Michael (2006), "[Is Democracy Good for the Poor](https://doi.org/10.1111/j.1540-5907.2006.00220.x)", *American Journal of Political Science*, Vol. 50, No. 4, pp. 860 - 874.  
+
+Prior to Ross' work, the prevailing belief was that democracies redistributed to the poor more than autocracies.  Ross's work challenged this belief. Specifically, Ross argued that previous studies had paid insufficient attention to differences between countries and time trends. Further, Ross argued that their analysis did not address the problem of missing data.
+
+Below you will find a dictionary with the main variables in two datasets we analyze:
+
+**World Bank:** `world_bank.csv`
+
+Name                 Description
+-------------------  --------------------------------------------------------
+`country_name`        Country name.
+`country_code`        Country abbreviation.
+`year`                Year.
+`gdp_growth`          GDP growth rate (percentage).      
+`gdp_per_capita`      GDP per capita (2000 US$).
+`inf_mort`            Infant mortality (deaths per 1000 children under 5).
+`pop_density`         Population density (per sq. km).
+
+**Polity IV:** `polity.csv`
+
+Name                 Description
+-------------------  ---------------------------------------------------------
+`country`             Country name.
+`scode`               Country abbreviation.
+`year`                Year.
+`polity`              Polity Score. Ranges from -10 (most autocratic) to 10 (most democratic)
+
+
+## Data cleaning
+
+1. We load the data.
+2. We subset the `polity` data so it contains only years from 1970 to 2015.
+3. We select the columns `scode`, `year` and `polity` from `polity`.
+4. We merge the two datasets using `inner_join`, by country code (called `country_code` in `wb` and `scode` in `polity`) and year.
+
+```{r, message=FALSE, warning=FALSE}
+
+
+
+```
+
+The distribution is right-skewed. A good idea is to take the logarithm.
+
+```{r, message=FALSE, warning=FALSE}
+
+
+```
+
+
+Our main independent variable is democracy (or, more precisely, political regime), measured by the Polity score (`polity`).
+
+```{r, message=FALSE, warning=FALSE}
+
+
+```
+
+We can visualize the bivariate relationship between these variables.
+
+```{r, message=FALSE, warning=FALSE}
+
+
+
+
+
+
+
+
+
+
+
+```
+
+
+## Question 1
+
+Run a regression of `log(inf_mort)` on `polity`.
+
+Then run another regression, adding `log(pop_density)`, `log(gdp_per_capita)` and `gdp_growth` as controls.
+
+Interpret the coefficients of `polity`. Note that if `log(inf_mort)` increases in `d`, that means that `inf_mort` has a `(100 * (exp(d) - 1))`% increase.
+
+## Answer 1
+
+```{r}
+
+
+```
+
+In the model without controls, an increase in 1 point in the Polity score is associated with a `r round(-100 * (exp(coef(model1)["polity"]) - 1), 2)`% decrease in infant mortality.
+
+If we add controls, we estimate that an increase in 1 point in the Polity score is associated with a `r round(-100 * (exp(coef(model2)["polity"]) - 1), 2)`% decrease in infant mortality.
+
+
+## Question 2
+
+Run another regression, adding country and year fixed effects. To add country fixed effects, add `country_name` as an independent variable. To add year fixed effects, add `factor(year)` as an independent variable.
+
+Interpret the coefficient of `polity`.
+
+## Answer 2
+
+```{r}
+
+
+```
+
+We estimate that an increase in 1 point in the Polity score is associated with a `r round(-100 * (exp(coef(model3)["polity"]) - 1), 2)`% decrease in infant mortality.
+
+
+## Question 3
+
+Calculate the 95% confidence interval of the coefficient for `polity` in each of the three models.
+
+Assess whether the estimated coefficients are statistically significant at the 0.05 level by looking at the confidence intervals.
+
+What can we conclude about the effect of democratization on infant mortality?
+
+## Answer 3
+
+```{r}
+
+
+```
+
+
+## Question 4
+
+Using `modelsummary` create a nicely formatted table showing the coefficients from the three models that we estimated. Don't show each country- and year fixed effect.
+
+## Answer 4
+
+```{r}
+
+
+```
+
+
+## Question 5
+
+Now we are going to investigate the pattern of missing data. Create a new column called `missing` which has a value of `1` if any of the variables `polity`, `pop_density`, `gdp_per_capita` or `gdp_growth` in your merged dataset are missing, and `0` otherwise.
+
+Create a bar plot (`geom_col`) showing the proportion of countries with missing data by year.
+
+Create a boxplot showing the polity score of countries with missing data vs countries without missing data.
+
+Interpret the patterns.
+
+## Answer 5
+
+```{r, message=FALSE, warning=FALSE}
+
+
+
+
+```
